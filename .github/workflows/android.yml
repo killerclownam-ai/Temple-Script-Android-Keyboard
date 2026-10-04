@@ -1,0 +1,44 @@
+name: Build Temple Script APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Unpack v0.4 project
+        run: unzip -q Temple_Script_Keyboard_v0.4.zip -d build-project
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build debug APK
+        run: gradle -p build-project assembleDebug --no-daemon
+
+      - name: Save APK for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: temple-script-keyboard-apk
+          path: build-project/app/build/outputs/apk/debug/app-debug.apk
